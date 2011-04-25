@@ -1,4 +1,4 @@
-= rgem2rpm
+== rgem2rpm
 
 rgem2rpm is a gem to make a rpm package out of a .gem file. The intent
 is to provide a minimal and flexible way to easily package a gem into an
