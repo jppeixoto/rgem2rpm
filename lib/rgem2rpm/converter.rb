@@ -127,7 +127,15 @@ class RGem2Rpm::Converter < Gem::Installer
 
   # return gem runtime dependencies
   def requires
-    "#{@spec.runtime_dependencies.join(', ').gsub(', runtime)', '').gsub('(', '').gsub('~>', '>=')}" unless @spec.runtime_dependencies.empty?
+    req_str = StringIO.new
+    # get ruby dependency
+    req_str << "ruby #{@spec.required_ruby_version || ">= 0" }"
+    # get rubygems dependency
+    req_str << ", rubygems #{@spec.required_rubygems_version}" unless @spec.required_rubygems_version.nil?
+    # get runtime dependencies
+    req_str << ", #{@spec.runtime_dependencies.join(', ').gsub(', runtime', '').gsub(')', '').gsub('(', '').gsub('~>', '>=')}" unless @spec.runtime_dependencies.empty?
+    # return string with dependencies
+    return req_str.string
   end
 
   # return gem description

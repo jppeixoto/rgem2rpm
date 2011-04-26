@@ -7,7 +7,7 @@ class RGem2Rpm::Ext::ConfigureBuilder < RGem2Rpm::Ext::Builder
     build = StringIO.new
     unless File.exist?('Makefile') then
       build << "sh ./configure --prefix=#{dest_path}"
-      #build << " #{Gem::Command.build_args.join ' '}" unless Gem::Command.build_args.empty?
+      build << " #{Gem::Command.build_args.join ' '}" unless Gem::Command.build_args.empty?
       build << "\n"
     end
     # get make commands
