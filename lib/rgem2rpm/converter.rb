@@ -29,10 +29,18 @@ class RGem2Rpm::Converter < Gem::Installer
     @os_install_dir = options_parse.os_install_dir
     # initialize rpm_top_dir
     @rpm_top_dir = "#{Dir.pwd}/rpmbuild"
-    # create rpm build environment
-    create_rpm_env
     # set defaul options
     super(gem)
+    # initialize temp dir
+    @rpm_tmp_dir = "#{@rpm_top_dir}/tmp/#{@spec.full_name}"
+    # initialize unpack dir
+    @rpm_unpack_dir = "#{@rpm_tmp_dir}/#{@spec.full_name}"
+    # initialize gemspec filename
+    @gemspec_filename = "#{@rpm_tmp_dir}/#{@spec.full_name}.gemspec"
+    # initialize bin dir
+    @bin_dir = "#{@rpm_tmp_dir}/bin"
+    # create rpm build environment
+    create_rpm_env
   end
 
   # return gem name
@@ -98,31 +106,26 @@ class RGem2Rpm::Converter < Gem::Installer
   ##
   # Converts gem into rpm using rpmbuild command
   def create_rpm
-    # create temp directory
-    tmp = "#{@rpm_top_dir}/tmp"
-    FileUtils.mkdir tmp
     # unpack gem software
-    unpack "#{tmp}/#{@spec.name}-#{@spec.version}/#{@spec.name}-#{@spec.version}"
+    unpack @rpm_unpack_dir
     # generate install
     generate_install
     # generate post install
     generate_post
     # generate executable files
-    @bin_dir = "#{@rpm_top_dir}/tmp/#{@spec.name}-#{@spec.version}/bin"
     generate_bin
     # create gemspec file
-    gemspec_filename = "#{tmp}/#{@spec.name}-#{@spec.version}/#{@spec.full_name}.gemspec"
-    File.open(gemspec_filename, 'w') { |f|
+    File.open(@gemspec_filename, 'w') { |f|
       f.write(@spec.to_ruby)
     }
     # create rpm spec file
     write_rpm_spec_from_template
     # create rpm source file
-    create_rpm_source(tmp)
+    create_rpm_source("#{@rpm_top_dir}/tmp")
     # create rpm
     rpmbuild
     # clean temp directory
-    FileUtils.rm_rf "#{tmp}"
+    FileUtils.rm_rf "#{@rpm_tmp_dir}"
   end
 
   # return gem runtime dependencies
@@ -145,35 +148,37 @@ class RGem2Rpm::Converter < Gem::Installer
 
   # return gem files
   def files
-    files = StringIO.new
-    files << "%{prefix}/specifications/%{name}-%{version}.gemspec"
-    # get files list
-    files << "\n%{prefix}/gems/%{name}-%{version}/#{@spec.files.join "\n%{prefix}/gems/%{name}-%{version}/"}" unless @spec.files.nil?
-    # get executable files
-    files << "\n%{prefix}/bin/#{@spec.executables.join "\n%{prefix}/bin/"}" unless @spec.executables.nil?
-    # return file list string
-    return files.string
+    @files
   end
 
   private
   ##
   # Create install string.
   def generate_install
+    files_str = StringIO.new
     install_str = StringIO.new
     install_str << "rm -rf %{buildroot}\n"
     install_str << "mkdir -p %{buildroot}%{prefix}/bin\n"
     install_str << "mkdir -p %{buildroot}%{prefix}/specifications\n"
     install_str << "mkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}\n"
     install_str << "install -p -m 644 %{name}-%{version}.gemspec %{buildroot}%{prefix}/specifications"
+    files_str << "%{prefix}/specifications/%{name}-%{version}.gemspec"
     # get files list
     @spec.files.each { |file|
-      install_str << "\ninstall -p -D -m 644 %{name}-%{version}/#{file} %{buildroot}%{prefix}/gems/%{name}-%{version}/#{file}"
+      if File.file? "#{@rpm_unpack_dir}/#{file}"
+        install_str << "\ninstall -p -D -m 644 %{name}-%{version}/#{file} %{buildroot}%{prefix}/gems/%{name}-%{version}/#{file}"
+        files_str << "\n%{prefix}/gems/%{name}-%{version}/#{file}"
+      elsif File.directory? "#{@rpm_unpack_dir}/#{file}"
+        install_str << "\nmkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}/#{file}"
+      end
     }
     # get executable file list
     @spec.executables.each { |file|
       install_str << "\ninstall -p -m 0755 bin/#{file} %{buildroot}%{prefix}/bin"
+      files_str << "\n%{prefix}/bin/#{file}"
     }
     @rpm_install = install_str.string
+    @files = files_str.string
   end
 
   ##
