@@ -7,7 +7,7 @@ class RGem2Rpm::Ext::RakeBuilder < RGem2Rpm::Ext::Builder
     build = StringIO.new
     if File.basename(extension) =~ /mkrf_conf/i then
       build << "#{File.basename Gem.ruby} #{extension}"
-      build << " #{Gem::Command.build_args.join " "}" unless Gem::Command.build_args.empty?
+      #build << " #{Gem::Command.build_args.join " "}" unless Gem::Command.build_args.empty?
       build << "\n"
     end
 
