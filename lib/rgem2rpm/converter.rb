@@ -111,7 +111,7 @@ class RGem2Rpm::Converter < Gem::Installer
     # generate install
     generate_install
     # generate post install
-    generate_post
+    #generate_post
     # generate executable files
     generate_bin
     # create gemspec file
@@ -166,10 +166,10 @@ class RGem2Rpm::Converter < Gem::Installer
     # get files list
     @spec.files.each { |file|
       if File.file? "#{@rpm_unpack_dir}/#{file}"
-        install_str << "\ninstall -p -D -m 644 %{name}-%{version}/#{file} %{buildroot}%{prefix}/gems/%{name}-%{version}/#{file}"
-        files_str << "\n%{prefix}/gems/%{name}-%{version}/#{file}"
+        install_str << "\ninstall -p -D -m 644 %{name}-%{version}/\"#{file}\" %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
+        files_str << "\n\"%{prefix}/gems/%{name}-%{version}/#{file}\""
       elsif File.directory? "#{@rpm_unpack_dir}/#{file}"
-        install_str << "\nmkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}/#{file}"
+        install_str << "\nmkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
       end
     }
     # get executable file list

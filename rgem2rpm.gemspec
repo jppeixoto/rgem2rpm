@@ -25,6 +25,5 @@ Gem::Specification.new do |s|
               "lib/rgem2rpm/ext/ext_conf_builder.rb",
               "lib/rgem2rpm/ext/rake_builder.rb",
               "conf/template.spec"]
-   s.has_rdoc = false
    s.add_dependency 'minitar', '>= 0.5.3'
 end
