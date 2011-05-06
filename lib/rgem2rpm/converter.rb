@@ -3,7 +3,6 @@ require 'fileutils'
 require 'zlib'
 require 'archive/tar/minitar'
 require 'erb'
-require 'rgem2rpm/ext'
 include Archive::Tar
 
 class RGem2Rpm::Converter < Gem::Installer
@@ -108,10 +107,19 @@ class RGem2Rpm::Converter < Gem::Installer
   def create_rpm
     # unpack gem software
     unpack @rpm_unpack_dir
+    # check if gem has extensions
+    unless @spec.extensions.empty?
+      # set rpm arch
+      @rpm_no_arch = false
+      # build extensions
+      build_extensions
+      # clean build
+      build_clean
+    end
+    # create file list with build files
+    generate_file_list
     # generate install
     generate_install
-    # generate post install
-    #generate_post
     # generate executable files
     generate_bin
     # create gemspec file
@@ -153,6 +161,32 @@ class RGem2Rpm::Converter < Gem::Installer
 
   private
   ##
+  # Get list of files generated during build operation
+  def generate_file_list
+    # check if gem has native extensions
+    if @spec.extensions.empty?
+      # use gemspec file list
+      @file_list = @spec.files
+    else
+      # initialize build files array
+      build_files = Array.new
+      # get required path
+      first_element = @spec.require_paths.first
+      require_path = if first_element.kind_of? Array then first_element.join("/") else first_element end
+      # start building make command
+      Dir.chdir("#{@rpm_tmp_dir}/#{@spec.full_name}/#{require_path}") do |path|
+        Dir.glob("**/*") do |file|
+          build_files << "#{require_path}/#{file}" unless File.directory?("#{path}/#{file}")
+        end
+      end
+      # include build files in the list of files
+      @file_list = @spec.files + build_files
+      # delete duplicate values
+      @file_list.uniq!
+    end
+  end
+
+  ##
   # Create install string.
   def generate_install
     files_str = StringIO.new
@@ -164,7 +198,7 @@ class RGem2Rpm::Converter < Gem::Installer
     install_str << "install -p -m 644 %{name}-%{version}.gemspec %{buildroot}%{prefix}/specifications"
     files_str << "%{prefix}/specifications/%{name}-%{version}.gemspec"
     # get files list
-    @spec.files.each { |file|
+    @file_list.each { |file|
       if File.file? "#{@rpm_unpack_dir}/#{file}"
         install_str << "\ninstall -p -D -m 644 %{name}-%{version}/\"#{file}\" %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
         files_str << "\n\"%{prefix}/gems/%{name}-%{version}/#{file}\""
@@ -179,41 +213,6 @@ class RGem2Rpm::Converter < Gem::Installer
     }
     @rpm_install = install_str.string
     @files = files_str.string
-  end
-
-  ##
-  # Builds extensions.  Valid types of extensions are extconf.rb files,
-  # configure scripts and rakefiles or mkrf_conf files.
-  def generate_post
-    return if @spec.extensions.empty?
-    @rpm_post = "echo \"Building native extensions.  This could take a while...\"\n"
-    # initialize make command string
-    build_cmd = StringIO.new
-    # start building make command
-    dest_path = File.join @os_install_dir, "gems", "#{name}-#{version}", @spec.require_paths.first
-    ran_rake = false # only run rake once
-
-    @spec.extensions.each do |extension|
-      break if ran_rake
-
-      builder = case extension
-                when /extconf/ then
-                  RGem2Rpm::Ext::ExtConfBuilder
-                when /configure/ then
-                  RGem2Rpm::Ext::ConfigureBuilder
-                when /rakefile/i, /mkrf_conf/i then
-                  ran_rake = true
-                  RGem2Rpm::Ext::RakeBuilder
-                else
-                  nil
-                end
-      # get build
-      build_cmd << builder.build(extension, dest_path)
-    end
-    # set rpm no arch to false
-    @rpm_no_arch = false
-    # return set post install
-    @rpm_post = "#{@rpm_post}#{build_cmd.string}"
   end
 
   def generate_bin
@@ -271,6 +270,18 @@ end
 gem '#{@spec.name}', version
 load Gem.bin_path('#{@spec.name}', '#{bin_file_name}', version)
 TEXT
+  end
+
+  def build_clean
+    # clean each build
+    @spec.extensions.each do |extension|
+      Dir.chdir(File.dirname("#{@rpm_tmp_dir}/#{@spec.full_name}/#{extension}")) do |path|
+        # delete intermediate build files
+        system "make clean"
+        # delete makefile
+        FileUtils.rm_rf("#{path}/Makefile")
+      end
+    end
   end
 
   def create_rpm_env

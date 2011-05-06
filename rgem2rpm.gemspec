@@ -18,12 +18,7 @@ Gem::Specification.new do |s|
               "lib/rgem2rpm.rb",
               "lib/rgem2rpm/argumentparse.rb",
               "lib/rgem2rpm/converter.rb",
-              "lib/rgem2rpm/ext.rb",
               "lib/rgem2rpm/version.rb",
-              "lib/rgem2rpm/ext/builder.rb",
-              "lib/rgem2rpm/ext/configure_builder.rb",
-              "lib/rgem2rpm/ext/ext_conf_builder.rb",
-              "lib/rgem2rpm/ext/rake_builder.rb",
               "conf/template.spec"]
    s.add_dependency 'minitar', '>= 0.5.3'
 end
