@@ -30,6 +30,8 @@ class RGem2Rpm::Converter < Gem::Installer
     @rpm_top_dir = "#{Dir.pwd}/rpmbuild"
     # set defaul options
     super(gem)
+    # load spec
+    self.spec
     # initialize temp dir
     @rpm_tmp_dir = "#{@rpm_top_dir}/tmp/#{@spec.full_name}"
     # initialize unpack dir
