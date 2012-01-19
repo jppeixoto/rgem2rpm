@@ -1,8 +1,8 @@
 %define __os_install_post    \
-    /usr/lib/rpm/brp-compress \
-    %{!?__debug_package:/usr/lib/rpm/brp-strip %{__strip}} \
-    /usr/lib/rpm/brp-strip-static-archive %{__strip} \
-    /usr/lib/rpm/brp-strip-comment-note %{__strip} %{__objdump} \
+	/usr/lib/rpm/brp-compress \
+	%{!?__debug_package:/usr/lib/rpm/brp-strip %{__strip}} \
+	/usr/lib/rpm/brp-strip-static-archive %{__strip} \
+	/usr/lib/rpm/brp-strip-comment-note %{__strip} %{__objdump} \
 %{nil}
 
 %define distnum %{expand:%%(/usr/lib/rpm/redhat/dist.sh --distnum)}

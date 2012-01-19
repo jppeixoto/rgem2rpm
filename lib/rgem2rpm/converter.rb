@@ -33,11 +33,11 @@ class RGem2Rpm::Converter < Gem::Installer
     # load spec
     self.spec
     # initialize temp dir
-    @rpm_tmp_dir = "#{@rpm_top_dir}/tmp/#{@spec.full_name}"
+    @rpm_tmp_dir = "#{@rpm_top_dir}/tmp/#{full_name}"
     # initialize unpack dir
-    @rpm_unpack_dir = "#{@rpm_tmp_dir}/#{@spec.full_name}"
+    @rpm_unpack_dir = "#{@rpm_tmp_dir}/#{full_name}"
     # initialize gemspec filename
-    @gemspec_filename = "#{@rpm_tmp_dir}/#{@spec.full_name}.gemspec"
+    @gemspec_filename = "#{@rpm_tmp_dir}/#{full_name}.gemspec"
     # initialize bin dir
     @bin_dir = "#{@rpm_tmp_dir}/bin"
     # create rpm build environment
@@ -46,12 +46,18 @@ class RGem2Rpm::Converter < Gem::Installer
 
   # return gem name
   def name
-    @spec.name
+    name = "rubygems-#{@spec.name}"
+    name = "#{name}-#{@spec.platform}" unless @spec.platform.nil?
+    name
   end
 
   # return gem version
   def version
     @spec.version
+  end
+  
+  def full_name
+    "#{name}-#{version}"
   end
 
   # return rpm release
@@ -162,97 +168,97 @@ class RGem2Rpm::Converter < Gem::Installer
   end
 
   private
-  ##
-  # Get list of files generated during build operation
-  def generate_file_list
-    # check if gem has native extensions
-    if @spec.extensions.empty?
-      # use gemspec file list
-      @file_list = @spec.files
-    else
-      # initialize build files array
-      build_files = Array.new
-      # get required path
-      first_element = @spec.require_paths.first
-      require_path = if first_element.kind_of? Array then first_element.join("/") else first_element end
-      # start building make command
-      Dir.chdir("#{@rpm_tmp_dir}/#{@spec.full_name}/#{require_path}") do |path|
-        Dir.glob("**/*") do |file|
-          build_files << "#{require_path}/#{file}" unless File.directory?("#{path}/#{file}")
+    ##
+    # Get list of files generated during build operation
+    def generate_file_list
+      # check if gem has native extensions
+      if @spec.extensions.empty?
+        # use gemspec file list
+        @file_list = @spec.files
+      else
+        # initialize build files array
+        build_files = Array.new
+        # get required path
+        first_element = @spec.require_paths.first
+        require_path = if first_element.kind_of? Array then first_element.join("/") else first_element end
+        # start building make command
+        Dir.chdir("#{@rpm_tmp_dir}/#{full_name}/#{require_path}") do |path|
+          Dir.glob("**/*") do |file|
+            build_files << "#{require_path}/#{file}" unless File.directory?("#{path}/#{file}")
+          end
         end
+        # include build files in the list of files
+        @file_list = @spec.files + build_files
+        # delete duplicate values
+        @file_list.uniq!
       end
-      # include build files in the list of files
-      @file_list = @spec.files + build_files
-      # delete duplicate values
-      @file_list.uniq!
     end
-  end
 
-  ##
-  # Create install string.
-  def generate_install
-    files_str = StringIO.new
-    install_str = StringIO.new
-    install_str << "rm -rf %{buildroot}\n"
-    install_str << "mkdir -p %{buildroot}%{prefix}/bin\n"
-    install_str << "mkdir -p %{buildroot}%{prefix}/specifications\n"
-    install_str << "mkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}\n"
-    install_str << "install -p -m 644 %{name}-%{version}.gemspec %{buildroot}%{prefix}/specifications"
-    files_str << "%{prefix}/specifications/%{name}-%{version}.gemspec"
-    # get files list
-    @file_list.each { |file|
-      if File.file? "#{@rpm_unpack_dir}/#{file}"
-        install_str << "\ninstall -p -D -m 644 %{name}-%{version}/\"#{file}\" %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
-        files_str << "\n\"%{prefix}/gems/%{name}-%{version}/#{file}\""
-      elsif File.directory? "#{@rpm_unpack_dir}/#{file}"
-        install_str << "\nmkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
+    ##
+    # Create install string.
+    def generate_install
+      files_str = StringIO.new
+      install_str = StringIO.new
+      install_str << "rm -rf %{buildroot}\n"
+      install_str << "mkdir -p %{buildroot}%{prefix}/bin\n"
+      install_str << "mkdir -p %{buildroot}%{prefix}/specifications\n"
+      install_str << "mkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}\n"
+      install_str << "install -p -m 644 %{name}-%{version}.gemspec %{buildroot}%{prefix}/specifications"
+      files_str << "%{prefix}/specifications/%{name}-%{version}.gemspec"
+      # get files list
+      @file_list.each { |file|
+        if File.file? "#{@rpm_unpack_dir}/#{file}"
+          install_str << "\ninstall -p -D -m 644 %{name}-%{version}/\"#{file}\" %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
+          files_str << "\n\"%{prefix}/gems/%{name}-%{version}/#{file}\""
+        elsif File.directory? "#{@rpm_unpack_dir}/#{file}"
+          install_str << "\nmkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
+        end
+      }
+      # get executable file list
+      @spec.executables.each { |file|
+        install_str << "\ninstall -p -m 0755 bin/#{file} %{buildroot}%{prefix}/bin"
+        files_str << "\n%{prefix}/bin/#{file}"
+      }
+      @rpm_install = install_str.string
+      @files = files_str.string
+    end
+
+    def generate_bin
+      return if @spec.executables.nil? or @spec.executables.empty?
+
+      # If the user has asked for the gem to be installed in a directory that is
+      # the system gem directory, then use the system bin directory, else create
+      # (or use) a new bin dir under the gem_home.
+      bindir = @bin_dir ? @bin_dir : Gem.bindir(@gem_home)
+
+      Dir.mkdir bindir unless File.exist? bindir
+      raise Gem::FilePermissionError.new(bindir) unless File.writable? bindir
+
+      @spec.executables.each do |filename|
+        filename.untaint
+        bin_path = File.expand_path "#{@spec.bindir}/#{filename}", @gem_dir
+        if File.exist?(bin_path)
+          mode = File.stat(bin_path).mode | 0111
+          File.chmod mode, bin_path
+        end
+        generate_bin_script filename, bindir
       end
-    }
-    # get executable file list
-    @spec.executables.each { |file|
-      install_str << "\ninstall -p -m 0755 bin/#{file} %{buildroot}%{prefix}/bin"
-      files_str << "\n%{prefix}/bin/#{file}"
-    }
-    @rpm_install = install_str.string
-    @files = files_str.string
-  end
+    end
 
-  def generate_bin
-    return if @spec.executables.nil? or @spec.executables.empty?
+    def generate_bin_script(filename, bindir)
+      @rpm_install = "#{@rpm_install}\nsed -i \"1i $(if (ruby -v 1>/dev/null 2>&1); then echo '\#\!/usr/bin/env ruby'; else echo '\#\!/usr/bin/env jruby'; fi;)\" %{buildroot}%{prefix}/bin/#{filename}"
+      bin_script_path = File.join bindir, formatted_program_filename(filename)
 
-    # If the user has asked for the gem to be installed in a directory that is
-    # the system gem directory, then use the system bin directory, else create
-    # (or use) a new bin dir under the gem_home.
-    bindir = @bin_dir ? @bin_dir : Gem.bindir(@gem_home)
-
-    Dir.mkdir bindir unless File.exist? bindir
-    raise Gem::FilePermissionError.new(bindir) unless File.writable? bindir
-
-    @spec.executables.each do |filename|
-      filename.untaint
-      bin_path = File.expand_path "#{@spec.bindir}/#{filename}", @gem_dir
-      if File.exist?(bin_path)
-        mode = File.stat(bin_path).mode | 0111
-        File.chmod mode, bin_path
+      File.open bin_script_path, 'wb', 0755 do |file|
+        file.print app_script_text(filename)
       end
-      generate_bin_script filename, bindir
     end
-  end
 
-  def generate_bin_script(filename, bindir)
-    @rpm_install = "#{@rpm_install}\nsed -i \"1i $(if (ruby -v 1>/dev/null 2>&1); then echo '\#\!/usr/bin/env ruby'; else echo '\#\!/usr/bin/env jruby'; fi;)\" %{buildroot}%{prefix}/bin/#{filename}"
-    bin_script_path = File.join bindir, formatted_program_filename(filename)
+     ##
+    # Return the text for an application file.
 
-    File.open bin_script_path, 'wb', 0755 do |file|
-      file.print app_script_text(filename)
-    end
-  end
-
-   ##
-  # Return the text for an application file.
-
-  def app_script_text(bin_file_name)
-    <<-TEXT
+    def app_script_text(bin_file_name)
+      <<-TEXT
 #
 # This file was generated by RubyGems.
 #
@@ -272,52 +278,52 @@ end
 gem '#{@spec.name}', version
 load Gem.bin_path('#{@spec.name}', '#{bin_file_name}', version)
 TEXT
-  end
+    end
 
-  def build_clean
-    # clean each build
-    @spec.extensions.each do |extension|
-      Dir.chdir(File.dirname("#{@rpm_tmp_dir}/#{@spec.full_name}/#{extension}")) do |path|
-        # delete intermediate build files
-        system "make clean"
-        # delete makefile
-        FileUtils.rm_rf("#{path}/Makefile")
+    def build_clean
+      # clean each build
+      @spec.extensions.each do |extension|
+        Dir.chdir(File.dirname("#{@rpm_tmp_dir}/#{full_name}/#{extension}")) do |path|
+          # delete intermediate build files
+          system "make clean"
+          # delete makefile
+          FileUtils.rm_rf("#{path}/Makefile")
+        end
       end
     end
-  end
 
-  def create_rpm_env
-    FileUtils.mkdir_p "#{@rpm_top_dir}/SPECS" unless File.exists?("#{@rpm_top_dir}/SPECS")
-    FileUtils.mkdir_p "#{@rpm_top_dir}/BUILD" unless File.exists?("#{@rpm_top_dir}/BUILD")
-    FileUtils.mkdir_p "#{@rpm_top_dir}/RPMS" unless File.exists?("#{@rpm_top_dir}/RPMS")
-    FileUtils.mkdir_p "#{@rpm_top_dir}/SRPMS" unless File.exists?("#{@rpm_top_dir}/SRPMS")
-    FileUtils.mkdir_p "#{@rpm_top_dir}/SOURCES" unless File.exists?("#{@rpm_top_dir}/SOURCES")
-  end
+    def create_rpm_env
+      FileUtils.mkdir_p "#{@rpm_top_dir}/SPECS" unless File.exists?("#{@rpm_top_dir}/SPECS")
+      FileUtils.mkdir_p "#{@rpm_top_dir}/BUILD" unless File.exists?("#{@rpm_top_dir}/BUILD")
+      FileUtils.mkdir_p "#{@rpm_top_dir}/RPMS" unless File.exists?("#{@rpm_top_dir}/RPMS")
+      FileUtils.mkdir_p "#{@rpm_top_dir}/SRPMS" unless File.exists?("#{@rpm_top_dir}/SRPMS")
+      FileUtils.mkdir_p "#{@rpm_top_dir}/SOURCES" unless File.exists?("#{@rpm_top_dir}/SOURCES")
+    end
 
-  def write_rpm_spec_from_template
-    template = ERB.new(File.read(@spec_template))
-    # write rpm spec file file
-    rpmspec_filename = "#{@rpm_top_dir}/SPECS/#{@spec.name}-#{@spec.version}.spec"
-    File.open(rpmspec_filename, 'w') {|f|
-      f.write(template.result(binding))
-    }
-  end
+    def write_rpm_spec_from_template
+      template = ERB.new(File.read(@spec_template))
+      # write rpm spec file file
+      rpmspec_filename = "#{@rpm_top_dir}/SPECS/#{full_name}.spec"
+      File.open(rpmspec_filename, 'w') {|f|
+        f.write(template.result(binding))
+      }
+    end
 
-  def create_rpm_source(orig)
-    # create tar.gz source file
-    tgz = Zlib::GzipWriter.new(File.open("#{@rpm_top_dir}/SOURCES/#{@spec.name}-#{@spec.version}.tar.gz", 'wb'))
-    # Warning: tgz will be closed!
-    FileUtils.cd "#{orig}"
-    Minitar.pack("#{@spec.name}-#{@spec.version}", tgz)
-    FileUtils.cd "#{@rpm_top_dir}"
-  end
+    def create_rpm_source(orig)
+      # create tar.gz source file
+      tgz = Zlib::GzipWriter.new(File.open("#{@rpm_top_dir}/SOURCES/#{full_name}.tar.gz", 'wb'))
+      # Warning: tgz will be closed!
+      FileUtils.cd "#{orig}"
+      Minitar.pack("#{full_name}", tgz)
+      FileUtils.cd "#{@rpm_top_dir}"
+    end
 
-  def rpmbuild
-    # define rpm build args
-    options = "-bb --rmspec --rmsource"
-    define = "--define \"_topdir #{@rpm_top_dir}\" --define \"_tmppath #{@rpm_top_dir}/tmp\""
-    specfile = "#{@rpm_top_dir}/SPECS/#{@spec.name}-#{@spec.version}.spec"
-    # create rpm
-    system "rpmbuild #{options} #{define} #{specfile}"
-  end
+    def rpmbuild
+      # define rpm build args
+      options = "-bb --rmspec --rmsource"
+      define = "--define \"_topdir #{@rpm_top_dir}\" --define \"_tmppath #{@rpm_top_dir}/tmp\""
+      specfile = "#{@rpm_top_dir}/SPECS/#{full_name}.spec"
+      # create rpm
+      system "rpmbuild #{options} #{define} #{specfile}"
+    end
 end
