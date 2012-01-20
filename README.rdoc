@@ -21,12 +21,12 @@ assemble rpm's using gem files. Run the next command to get help:
 
     $ rgem2rpm --help
     Usage: rgem2rpm [options] [gemfilename]
-	options:
-			--template SPECTEMPLATE      Define new rpm spec template.
-			--release RPMRELEASE         Define rpm spec release.
-			--rpmgroup RPMGROUPNAME      Define rpm spec group.
-			--osuser USERNAME            Define rpm spec os install user.
-			--osgroup GROUPNAME          Define rpm spec os install group.
-			--osinstalldir INSTALLDIR    Define rpm spec os install directory.
-			--help                       Show this message.
-			--version                    Show version.
+        options:
+                        --template SPECTEMPLATE      Define new rpm spec template.
+                        --release RPMRELEASE         Define rpm spec release.
+                        --rpmgroup RPMGROUPNAME      Define rpm spec group.
+                        --osuser USERNAME            Define rpm spec os install user.
+                        --osgroup GROUPNAME          Define rpm spec os install group.
+                        --osinstalldir INSTALLDIR    Define rpm spec os install directory.
+                        --help                       Show this message.
+                        --version                    Show version.

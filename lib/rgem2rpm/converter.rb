@@ -157,14 +157,12 @@ class RGem2Rpm::Converter < Gem::Installer
     req_str << ", rubygems #{@spec.required_rubygems_version}" unless @spec.required_rubygems_version.nil?
     # set runtime dependencies
     @spec.runtime_dependencies.each { |d|
+      req_str << ", #{prefix}-#{d.name} #{d.requirement.to_s.gsub('~>', '>=')}"
       if d.requirement.to_s =~ /~>/
-        req_str << ", #{d.name} #{d.requirement.to_s.gsub('~>', '>=')}"
         version = d.requirement.to_s.delete('~>').strip.split('.')
         version[version.size - 1] = "0"
         version[version.size - 2] = (version[version.size - 2].to_i + 1).to_s
-        req_str << ", #{d.name} < #{version.join('.')}"
-      else
-        req_str << ", #{d.name} #{d.requirement}"
+        req_str << ", #{prefix}-#{d.name} < #{version.join('.')}"
       end
     }
     # return string with dependencies
