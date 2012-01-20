@@ -44,10 +44,14 @@ class RGem2Rpm::Converter < Gem::Installer
     create_rpm_env
   end
 
+  def prefix
+    "rubygem"
+  end
+  
   # return gem name
   def name
-    name = "rubygems-#{@spec.name}"
-    name = "#{name}-#{@spec.platform}" unless @spec.platform.nil?
+    name = "#{prefix}-#{@spec.name}"
+    name = "#{name}-#{@spec.platform}" if @spec.platform == 'java'
     name
   end
 
@@ -147,12 +151,22 @@ class RGem2Rpm::Converter < Gem::Installer
   # return gem runtime dependencies
   def requires
     req_str = StringIO.new
-    # get ruby dependency
+    # set ruby dependency
     req_str << "ruby #{@spec.required_ruby_version || ">= 0" }"
-    # get rubygems dependency
+    # set rubygems dependency
     req_str << ", rubygems #{@spec.required_rubygems_version}" unless @spec.required_rubygems_version.nil?
-    # get runtime dependencies
-    req_str << ", #{@spec.runtime_dependencies.join(', ').gsub(', runtime', '').gsub(')', '').gsub('(', '').gsub('~>', '>=')}" unless @spec.runtime_dependencies.empty?
+    # set runtime dependencies
+    @spec.runtime_dependencies.each { |d|
+      if d.requirement.to_s =~ /~>/
+        req_str << ", #{d.name} #{d.requirement.to_s.gsub('~>', '>=')}"
+        version = d.requirement.to_s.delete('~>').strip.split('.')
+        version[version.size - 1] = "0"
+        version[version.size - 2] = (version[version.size - 2].to_i + 1).to_s
+        req_str << ", #{d.name} < #{version.join('.')}"
+      else
+        req_str << ", #{d.name} #{d.requirement}"
+      end
+    }
     # return string with dependencies
     return req_str.string
   end
