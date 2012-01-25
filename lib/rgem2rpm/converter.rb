@@ -48,10 +48,14 @@ class RGem2Rpm::Converter < Gem::Installer
     "rubygem"
   end
   
+  def prefix_name
+    "#{prefix}-#{name}"
+  end
+  
   # return gem name
   def name
-    name = "#{prefix}-#{@spec.name}"
-    name = "#{name}-#{@spec.platform}" if @spec.platform == 'java'
+    name = @spec.name
+    name = "#{name}_#{@spec.platform}" if @spec.platform.to_s == 'java'
     name
   end
 
@@ -61,7 +65,7 @@ class RGem2Rpm::Converter < Gem::Installer
   end
   
   def full_name
-    "#{name}-#{version}"
+    "#{prefix_name}-#{version}"
   end
 
   # return rpm release
@@ -151,13 +155,18 @@ class RGem2Rpm::Converter < Gem::Installer
   # return gem runtime dependencies
   def requires
     req_str = StringIO.new
-    # set ruby dependency
-    req_str << "ruby #{@spec.required_ruby_version || ">= 0" }"
+    # set ruby dependency for native gems
+    unless @spec.extensions.empty?
+      req_str << "ruby(abi)"
+      req_str << " #{@spec.required_ruby_version}" unless @spec.required_ruby_version.nil?
+    end
     # set rubygems dependency
-    req_str << ", rubygems #{@spec.required_rubygems_version}" unless @spec.required_rubygems_version.nil?
+    req_str << ", " unless req_str.size == 0
+    req_str << "rubygems #{@spec.required_rubygems_version}" unless @spec.required_rubygems_version.nil?
     # set runtime dependencies
     @spec.runtime_dependencies.each { |d|
-      req_str << ", #{prefix}-#{d.name} #{d.requirement.to_s.gsub('~>', '>=')}"
+      req_str << ', ' unless req_str.size == 0 
+      req_str << "#{prefix}-#{d.name} #{d.requirement.to_s.gsub('~>', '>=')}"
       if d.requirement.to_s =~ /~>/
         version = d.requirement.to_s.delete('~>').strip.split('.')
         version[version.size - 1] = "0"
@@ -166,7 +175,15 @@ class RGem2Rpm::Converter < Gem::Installer
       end
     }
     # return string with dependencies
-    return req_str.string
+    req_str.string
+  end
+  
+  # return gem provides clause
+  def provides
+    str = StringIO.new
+    str << "#{prefix}(#{name}) = #{version}"
+    str << ", #{prefix}(#{@spec.name}) = #{version}" if @spec.platform.to_s == 'java'
+    str.string
   end
 
   # return gem description

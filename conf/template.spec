@@ -7,7 +7,7 @@
 
 %define distnum %{expand:%%(/usr/lib/rpm/redhat/dist.sh --distnum)}
 %define disttype %{expand:%%(/usr/lib/rpm/redhat/dist.sh --disttype)}
-%define name <%=name%>
+%define name <%=prefix_name%>
 %define version <%=version%>
 %define release <%=rpm_release%>.%{disttype}%{distnum}
 
@@ -22,6 +22,7 @@ Prefix: <%=os_install_dir%>
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 <%="BuildArch: noarch" if rpm_no_arch%>
 <%="Requires: #{requires}" unless requires.nil?%>
+<%="Provides: #{provides}" unless provides.nil?%>
 %description
 <%=description%>
 

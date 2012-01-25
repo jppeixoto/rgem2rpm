@@ -1,9 +1,9 @@
 Gem::Specification.new do |s|
    s.name = %q{rgem2rpm}
-   s.version = "1.3.2"
+   s.version = "1.3.3"
    s.required_ruby_version = Gem::Requirement.new(">= 1.8.6")
    s.required_rubygems_version = Gem::Requirement.new(">= 1.4.2") if s.respond_to?(:required_rubygems_version=)
-   s.date = %q{2012-01-20}
+   s.date = %q{2012-01-24}
    s.authors = ["Joao Peixoto"]
    s.email = %q{peixoto.joao@gmail.com}
    s.summary = %q{Convert ruby gems into rpm}
