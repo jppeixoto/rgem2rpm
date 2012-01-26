@@ -166,12 +166,12 @@ class RGem2Rpm::Converter < Gem::Installer
     # set runtime dependencies
     @spec.runtime_dependencies.each { |d|
       req_str << ', ' unless req_str.size == 0 
-      req_str << "#{prefix}-#{d.name} #{d.requirement.to_s.gsub('~>', '>=')}"
+      req_str << "#{prefix}(#{d.name}) #{d.requirement.to_s.gsub('~>', '>=')}"
       if d.requirement.to_s =~ /~>/
         version = d.requirement.to_s.delete('~>').strip.split('.')
         version[version.size - 1] = "0"
         version[version.size - 2] = (version[version.size - 2].to_i + 1).to_s
-        req_str << ", #{prefix}-#{d.name} < #{version.join('.')}"
+        req_str << ", #{prefix}(#{d.name}) < #{version.join('.')}"
       end
     }
     # return string with dependencies
