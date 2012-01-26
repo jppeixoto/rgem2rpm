@@ -21,8 +21,8 @@ Source: %{name}-%{version}.tar.gz
 Prefix: <%=os_install_dir%>
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 <%="BuildArch: noarch" if rpm_no_arch%>
-<%="Requires: #{requires}" unless requires.nil?%>
-<%="Provides: #{provides}" unless provides.nil?%>
+<%="Requires: #{requires}" unless requires == ""%>
+<%="Provides: #{provides}" unless provides == ""%>
 %description
 <%=description%>
 
