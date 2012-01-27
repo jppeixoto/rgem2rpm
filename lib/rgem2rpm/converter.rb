@@ -12,6 +12,8 @@ class RGem2Rpm::Converter < Gem::Installer
   #
   # :rpm_top_dir:: path used by rpmbuild to generate rpms
   def initialize(options_parse, gem)
+    # gem name
+    @gem_name = gem.match(/(.+).gem/i)[1]
     # set spectemplate
     @spec_template = options_parse.spec_template
     # set rpm release
@@ -35,9 +37,9 @@ class RGem2Rpm::Converter < Gem::Installer
     # initialize temp dir
     @rpm_tmp_dir = "#{@rpm_top_dir}/tmp/#{full_name}"
     # initialize unpack dir
-    @rpm_unpack_dir = "#{@rpm_tmp_dir}/#{full_name}"
+    @rpm_unpack_dir = "#{@rpm_tmp_dir}/#{@gem_name}"
     # initialize gemspec filename
-    @gemspec_filename = "#{@rpm_tmp_dir}/#{full_name}.gemspec"
+    @gemspec_filename = "#{@rpm_tmp_dir}/#{@gem_name}.gemspec"
     # initialize bin dir
     @bin_dir = "#{@rpm_tmp_dir}/bin"
     # create rpm build environment
@@ -231,16 +233,16 @@ class RGem2Rpm::Converter < Gem::Installer
       install_str << "rm -rf %{buildroot}\n"
       install_str << "mkdir -p %{buildroot}%{prefix}/bin\n"
       install_str << "mkdir -p %{buildroot}%{prefix}/specifications\n"
-      install_str << "mkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}\n"
-      install_str << "install -p -m 644 %{name}-%{version}.gemspec %{buildroot}%{prefix}/specifications"
-      files_str << "%{prefix}/specifications/%{name}-%{version}.gemspec"
+      install_str << "mkdir -p %{buildroot}%{prefix}/gems/#{@gem_name}\n"
+      install_str << "install -p -m 644 #{@gem_name}.gemspec %{buildroot}%{prefix}/specifications"
+      files_str << "%{prefix}/specifications/#{@gem_name}.gemspec"
       # get files list
       @file_list.each { |file|
         if File.file? "#{@rpm_unpack_dir}/#{file}"
-          install_str << "\ninstall -p -D -m 644 %{name}-%{version}/\"#{file}\" %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
-          files_str << "\n\"%{prefix}/gems/%{name}-%{version}/#{file}\""
+          install_str << "\ninstall -p -D -m 644 #{@gem_name}/\"#{file}\" %{buildroot}%{prefix}/gems/#{@gem_name}/\"#{file}\""
+          files_str << "\n\"%{prefix}/gems/#{@gem_name}/#{file}\""
         elsif File.directory? "#{@rpm_unpack_dir}/#{file}"
-          install_str << "\nmkdir -p %{buildroot}%{prefix}/gems/%{name}-%{version}/\"#{file}\""
+          install_str << "\nmkdir -p %{buildroot}%{prefix}/gems/#{@gem_name}/\"#{file}\""
         end
       }
       # get executable file list
