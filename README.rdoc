@@ -12,7 +12,7 @@ gem files to assemble and Just Work.
 
 1. Install the gem: <tt>gem install rgem2rpm</tt>.
 2. Run the command: rgem2rpm <gemfilename>
-3. Get the rpm file in the ./rpmbuild/RPMS/<arch>/
+3. The RPM file will be cretated in the current directory
 
 == Usage
 
@@ -22,11 +22,12 @@ assemble rpm's using gem files. Run the next command to get help:
     $ rgem2rpm --help
     Usage: rgem2rpm [options] [gemfilename]
         options:
-                        --template SPECTEMPLATE      Define new rpm spec template.
-                        --release RPMRELEASE         Define rpm spec release.
-                        --rpmgroup RPMGROUPNAME      Define rpm spec group.
-                        --osuser USERNAME            Define rpm spec os install user.
-                        --osgroup GROUPNAME          Define rpm spec os install group.
-                        --osinstalldir INSTALLDIR    Define rpm spec os install directory.
+                        --template TEMPLATE          RPM spec template.
+                        --release RELEASE            RPM spec release.
+                        --group GROUP                RPM spec group.
+                        --osuser OSUSER              OS install user.
+                        --osgroup OSGROUP            OS install group.
+                        --installdir INSTALLDIR      OS install directory.
+						--jruby                      Build RPM to jruby platform (only when gem has executables).
                         --help                       Show this message.
                         --version                    Show version.

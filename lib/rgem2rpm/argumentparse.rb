@@ -1,5 +1,4 @@
 require 'optparse'
-require 'ostruct'
 
 class RGem2Rpm::ArgumentParse
   #
@@ -8,46 +7,45 @@ class RGem2Rpm::ArgumentParse
   def self.parse(args)
     # The options specified on the command line will be collected in *options*.
     # We set default values here.
-    options = OpenStruct.new
-    options.spec_template = File.expand_path('../../../conf/template.spec', __FILE__)
-    options.rpm_release = '1'
-    options.rpm_group = 'Ruby/Gems'
-    options.os_user = 'root'
-    options.os_group = 'root'
-    options.os_install_dir = '/opt/ruby'
+    options = {}
 
     opts = OptionParser.new do |opt|
       opt.banner = "Usage: rgem2rpm [options] [gemfilename]"
       opt.separator "options:"
 
       # Template argument
-      opt.on("--template SPECTEMPLATE", "Define new rpm spec template.") do |spec_template|
-        options.spec_template = spec_template
+      opt.on("--template TEMPLATE", "RPM spec template.") do |template|
+        options[:template] = template
       end
 
       # Release name
-      opt.on("--release RPMRELEASE", "Define rpm spec release.") do |rpm_release|
-        options.rpm_release = rpm_release
+      opt.on("--release RELEASE", "RPM spec release.") do |release|
+        options[:release] = release
       end
 	  
       # rpm group
-      opt.on("--rpmgroup RPMGROUPNAME", "Define rpm spec group.") do |rpm_group|
-        options.rpm_group = rpm_group
+      opt.on("--group GROUP", "RPM spec group.") do |group|
+        options[:group] = group
       end
 	  
       # operating system install user
-      opt.on("--osuser USERNAME", "Define rpm spec os install user.") do |os_user|
-        options.os_user = os_user
+      opt.on("--osuser OSUSER", "OS install user.") do |osuser|
+        options[:osuser] = osuser
       end
 
       # operating system install group
-      opt.on("--osgroup GROUPNAME", "Define rpm spec os install group.") do |os_group|
-        options.os_group = os_group
+      opt.on("--osgroup OSGROUP", "OS install group.") do |osgroup|
+        options[:osgroup] = osgroup
       end
 	  
       # operating system install dir
-      opt.on("--osinstalldir INSTALLDIR", "Define rpm spec os install directory.") do |os_install_dir|
-        options.os_install_dir = os_install_dir
+      opt.on("--installdir INSTALLDIR", "OS install directory.") do |installdir|
+        options[:installdir] = installdir
+      end
+      
+      # jruby gem
+      opt.on("--jruby", "Build RPM to jruby platform (only when gem has executables).") do
+        options[:platform] = 'jruby'
       end
 	  
       # No argument, shows at tail.  This will print an options summary.
@@ -59,7 +57,7 @@ class RGem2Rpm::ArgumentParse
 
       # Another typical switch to print the version.
       opt.on_tail("--version", "Show version.") do
-        puts RGem2Rpm::VERSION  
+        puts RGem2Rpm::VERSION
         exit
       end
     end

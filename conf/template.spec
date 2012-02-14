@@ -7,22 +7,23 @@
 
 %define distnum %{expand:%%(/usr/lib/rpm/redhat/dist.sh --distnum)}
 %define disttype %{expand:%%(/usr/lib/rpm/redhat/dist.sh --disttype)}
-%define name <%=prefix_name%>
+%define name <%=name%>
 %define version <%=version%>
-%define release <%=rpm_release%>.%{disttype}%{distnum}
+%define release <%=release%>.%{disttype}%{distnum}
 
 Name: %{name}
 Version: %{version}
 Release: %{release}
-License: See <%=homepage%>
+License: <%=license%>
 Summary: <%=summary%>
-Group: <%=rpm_group%>
+Group: <%=group%>
 Source: %{name}-%{version}.tar.gz
-Prefix: <%=os_install_dir%>
+Prefix: <%=installdir%>
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-<%="BuildArch: noarch" if rpm_no_arch%>
+<%="BuildArch: noarch" unless buildarch.nil?%>
 <%="Requires: #{requires}" unless requires == ""%>
 <%="Provides: #{provides}" unless provides == ""%>
+
 %description
 <%=description%>
 
@@ -30,13 +31,10 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 %setup -q
 
 %install
-<%=rpm_install%>
-
-<%="%post\n#{rpm_post}" unless rpm_post.nil?%>
-
-%postun
-rm -rf %{prefix}/gems/%{name}-%{version}
+<%=installlist%>
 
 %files
-%defattr(-,<%=os_user%>,<%=os_group%>)
-<%=files%>
+<%=filelist%>
+
+%changelog
+<%=changelog%>
