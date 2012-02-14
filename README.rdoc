@@ -28,6 +28,6 @@ assemble rpm's using gem files. Run the next command to get help:
                         --osuser OSUSER              OS install user.
                         --osgroup OSGROUP            OS install group.
                         --installdir INSTALLDIR      OS install directory.
-						--jruby                      Build RPM to jruby platform (only when gem has executables).
+                        --jruby                      Build RPM to jruby platform (only when gem has executables).
                         --help                       Show this message.
                         --version                    Show version.
