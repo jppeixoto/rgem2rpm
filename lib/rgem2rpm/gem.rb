@@ -87,7 +87,7 @@ class RGem2Rpm::Gem
     # define name and platform
     def name_and_platform(gemname)
       name = gemname
-      if gemname =~ /jruby|jars|java/ or @spec[:platform] == 'java'
+      if gemname =~ /jruby|jars|java/ or @spec[:platform].to_s == 'java'
         @platform = 'jruby'
         name = "jruby-#{gemname}" unless gemname =~ /jruby/
       elsif @platform == 'jruby' and !@spec[:executables].nil? and !@spec[:executables].empty?
