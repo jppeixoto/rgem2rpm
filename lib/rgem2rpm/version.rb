@@ -1,3 +1,3 @@
 module RGem2Rpm
-  VERSION = '1.4.2'
+  VERSION = '1.4.3'
 end

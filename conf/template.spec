@@ -22,6 +22,7 @@ Prefix: <%=installdir%>
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 <%="BuildArch: noarch" unless buildarch.nil?%>
 <%="Requires: #{requires}" unless requires == ""%>
+<%="Conflicts: #{conflicts}" unless conflicts == ""%>
 <%="Provides: #{provides}" unless provides == ""%>
 
 %description

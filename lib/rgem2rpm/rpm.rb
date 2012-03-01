@@ -76,20 +76,40 @@ class RGem2Rpm::Rpm
   
   def requires
     req_str = StringIO.new
-    req_str << "rubygems #{@rubygem}" unless @rubygem.nil?
+    # set rubygems dependency
+    unless @rubygem.nil?
+      req_str << "rubygems"
+      req_str << " #{@rubygem}" unless @rubygem == '>= 0'
+    end
     # set runtime dependencies
     @dependencies.each { |d|
-      req_str << ', ' unless req_str.size == 0 
-      req_str << "rubygem(#{d.name}) #{d.requirement.to_s.gsub('~>', '>=')}"
-      if d.requirement.to_s =~ /~>/
-        version = d.requirement.to_s.delete('~>').strip.split('.')
-        version[version.size - 1] = "0"
-        version[version.size - 2] = (version[version.size - 2].to_i + 1).to_s
-        req_str << ", rubygem(#{d.name}) < #{version.join('.')}"
-      end
+      d.requirement.requirements.each { |v|
+        req_str << ', ' unless req_str.size == 0
+        req_str << "rubygem(#{d.name})"
+        req_str << " #{v[0].gsub('~>','>=')} #{v[1].to_s}" unless v[0] =~ /!=/
+        if v[0] =~ /~>/
+          version = v[1].to_s.strip.split('.')
+          version[version.size - 1] = "0"
+          version[version.size - 2] = (version[version.size - 2].to_i + 1).to_s
+          req_str << ", rubygem(#{d.name}) < #{version.join('.')}"
+        end
+      }
     }
     # return string with dependencies
     req_str.string
+  end
+  
+  def conflicts
+    conflict_str = StringIO.new
+    # set conflicts
+    @dependencies.each { |d|
+      d.requirement.requirements.each { |v|
+        conflict_str << ', ' unless conflict_str.size == 0
+        conflict_str << "rubygem(#{d.name}) #{v[0].gsub('!=','=')} #{v[1].to_s}" if v[0] =~ /!=/
+      }
+    }
+    # returns string with conflicts
+    conflict_str.string
   end
   
   # return gem provides clause
