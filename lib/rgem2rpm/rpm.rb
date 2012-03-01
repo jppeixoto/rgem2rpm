@@ -34,15 +34,18 @@ class RGem2Rpm::Rpm
     install_str << "rm -rf %{buildroot}\n"
     # get directories
     @files[:directories].each { |directory|
-      install_str << "install -d #{directory} %{buildroot}%{prefix}/#{directory}\n"
+      directory.gsub!(/%/, '%%')
+      install_str << "install -d \"#{directory}\" %{buildroot}%{prefix}/\"#{directory}\"\n"
     }
     # get files
     @files[:files].each { |file|
+      file.gsub!(/%/, '%%')
       install_str << "install -m 644 \"#{file}\" %{buildroot}%{prefix}/\"#{file}\"\n"
     }
     # get executables
     @files[:executables].each { |executable|
-      install_str << "install -m 0755 #{executable} %{buildroot}%{prefix}/#{executable}\n"
+      executable.gsub!(/%/, '%%')
+      install_str << "install -m 0755 \"#{executable}\" %{buildroot}%{prefix}/\"#{executable}\"\n"
     }
     # return install string
     install_str.string
@@ -52,14 +55,13 @@ class RGem2Rpm::Rpm
     files_str = StringIO.new
     files_str << "%defattr(0644,#{@osuser},#{@osgroup},0755)\n"
     files_str << "%dir %{prefix}\n"
-    # get directories
-    @files[:directories].each { |directory|
-      files_str << "%dir %{prefix}/#{directory}\n"
-    }
-    # get files
-    @files[:files].each { |file|
-      files_str << "%{prefix}/#{file}\n"
-    }
+    files_str << "%dir %{prefix}/bin\n"
+    files_str << "%dir %{prefix}/gems\n"
+    files_str << "%dir %{prefix}/#{@files[:gempath]}\n"
+    files_str << "%dir %{prefix}/specifications\n"
+    files_str << "%{prefix}/#{@files[:specification]}\n"
+    files_str << "%{prefix}/#{@files[:gempath]}/*\n"
+    
     # get executables
     @files[:executables].each { |executable|
       files_str << "%attr(0755,#{@osuser},#{@osgroup}) %{prefix}/#{executable}\n"

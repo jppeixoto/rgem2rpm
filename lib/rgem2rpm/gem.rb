@@ -111,6 +111,14 @@ class RGem2Rpm::Gem
             @spec[:files][key] << file
           end
         end
+        # get gem path
+        Dir.glob("gems/*") do |file|
+          @spec[:files][:gempath] = file
+        end
+        # get specification filename
+        Dir.glob("specifications/*") do |file|
+          @spec[:files][:specification] = file
+        end
         # get executable files
         Dir.glob("bin/*") do |file|
           @spec[:files][:executables] << file
