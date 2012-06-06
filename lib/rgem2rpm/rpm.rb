@@ -42,6 +42,11 @@ class RGem2Rpm::Rpm
       file.gsub!(/%/, '%%')
       install_str << "install -m 644 \"#{file}\" %{buildroot}%{prefix}/\"#{file}\"\n"
     }
+    # get specification
+    @files[:specification].each { |file|
+      file.gsub!(/%/, '%%')
+      install_str << "install -m 644 \"#{file}\" %{buildroot}%{prefix}/\"#{file}\"\n"
+    }
     # get executables
     @files[:executables].each { |executable|
       executable.gsub!(/%/, '%%')
@@ -60,7 +65,7 @@ class RGem2Rpm::Rpm
     files_str << "%dir %{prefix}/#{@files[:gempath]}\n"
     files_str << "%dir %{prefix}/specifications\n"
     files_str << "%{prefix}/#{@files[:specification]}\n"
-    files_str << "%{prefix}/#{@files[:gempath]}/*\n"
+    files_str << "%{prefix}/#{@files[:gempath]}/*\n" unless @files[:files].empty?
     
     # get executables
     @files[:executables].each { |executable|

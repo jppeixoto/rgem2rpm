@@ -105,11 +105,9 @@ class RGem2Rpm::Gem
         @spec[:files][:directories] << 'specifications'
         @spec[:files][:directories] << 'bin'
         # get files and directories
-        %w(gems specifications).each do |path|
-          Dir.glob("#{path}/**/*") do |file|
-            key = File.directory?(file) ? :directories : :files
-            @spec[:files][key] << file
-          end
+        Dir.glob("gems/**/*") do |file|
+          key = File.directory?(file) ? :directories : :files
+          @spec[:files][key] << file
         end
         # get gem path
         Dir.glob("gems/*") do |file|
