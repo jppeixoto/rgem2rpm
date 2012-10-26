@@ -17,6 +17,7 @@ Release: %{release}
 License: <%=license%>
 Summary: <%=summary%>
 Group: <%=group%>
+Packager: <%=packager%>
 Source: %{name}-%{version}.tar.gz
 Prefix: <%=installdir%>
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)

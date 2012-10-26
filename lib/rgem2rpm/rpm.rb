@@ -1,7 +1,7 @@
 require 'erb'
 
 class RGem2Rpm::Rpm
-  attr_accessor :name, :version, :release, :license, :summary, :group, :description, :installdir
+  attr_accessor :name, :version, :release, :license, :summary, :group, :packager, :description, :installdir
   
   def initialize(args)
     @template = args[:template] || File.dirname(__FILE__) + '/../../conf/template.spec'
@@ -11,10 +11,11 @@ class RGem2Rpm::Rpm
     @release = args[:release] || '1'
     @license = "See #{args[:homepage]}"
     @summary = args[:summary]
-    @group = args[:group] || 'Ruby/Gems'
+    @packager = args[:packager] || 'EXGEMS'
+    @group = args[:group] || 'ptin/ext-generic'
     @osuser = args[:osuser] || 'root'
     @osgroup = args[:osgroup] || 'root'
-    @description = args[:description]
+    @description = process_description(args[:description])
     @installdir = args[:installdir] || '/opt/ruby'
     @arch = args[:architecture]
     @files = args[:files]
@@ -39,14 +40,17 @@ class RGem2Rpm::Rpm
     }
     # get files
     @files[:files].each { |file|
-      file.gsub!(/%/, '%%')
-      install_str << "install -m 644 \"#{file}\" %{buildroot}%{prefix}/\"#{file}\"\n"
+      if file.end_with?('.sh')
+        @files[:files].delete(file)
+        @files[:executables] << file
+      else
+        file.gsub!(/%/, '%%')
+        install_str << "install -m 644 \"#{file}\" %{buildroot}%{prefix}/\"#{file}\"\n"
+      end
     }
     # get specification
-    @files[:specification].each { |file|
-      file.gsub!(/%/, '%%')
-      install_str << "install -m 644 \"#{file}\" %{buildroot}%{prefix}/\"#{file}\"\n"
-    }
+    specfile = @files[:specification].gsub(/%/, '%%')
+    install_str << "install -m 644 \"#{specfile}\" %{buildroot}%{prefix}/\"#{specfile}\"\n"
     # get executables
     @files[:executables].each { |executable|
       executable.gsub!(/%/, '%%')
@@ -145,6 +149,16 @@ class RGem2Rpm::Rpm
       File.open("#{@name}-#{@version}.spec", 'w') { |f|
         f.write(template.result(binding))
       }
+    end
+    
+    def process_description(description)
+      res = []
+      str = description
+      while str != nil
+        res << "#{str[0,80]}"
+        str = str[80,str.size]
+      end
+      res.join "\n"
     end
 
     def build
