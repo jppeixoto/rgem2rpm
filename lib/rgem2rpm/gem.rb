@@ -36,8 +36,6 @@ class RGem2Rpm::Gem
     Dir["#{@installdir}/*"].each {|name| FileUtils.rm_rf(name) unless name =~ /bin|gems|specifications/ }
     # get file list
     files
-    # alter executables first line
-    shebang
     # build tar.gz
     build_source
   end
@@ -106,7 +104,7 @@ class RGem2Rpm::Gem
         @spec[:files][:directories] << 'bin'
         # get files and directories
         Dir.glob("gems/**/*") do |file|
-          key = File.directory?(file) ? :directories : :files
+          key = File.directory?(file) ? :directories : (File.executable?(file) || file.end_with?('.sh') ? :executables : :files)
           @spec[:files][key] << file
         end
         # get gem path
@@ -120,19 +118,16 @@ class RGem2Rpm::Gem
         # get executable files
         Dir.glob("bin/*") do |file|
           @spec[:files][:executables] << file
+          shebang(file)
         end
       end
     end
     
-    def shebang
-      # check if gem has executables
-      return if @spec[:executables].nil? or @spec[:executables].empty?
+    def shebang(filename)
       # alter first line of all executables
-      @spec[:executables].each do |file|
-        file_arr = File.readlines("#{@installdir}/bin/#{file}")
-        file_arr[0] = "#!/usr/bin/env #{@platform}\n"
-        File.open("#{@installdir}/bin/#{file}", 'w') { |f| f.write(file_arr.join) }
-      end
+      file_arr = File.readlines(filename)
+      file_arr[0] = "#!/usr/bin/env #{@platform}\n"
+      File.open(filename, 'w') { |f| f.write(file_arr.join) }
     end
     
     def build_source

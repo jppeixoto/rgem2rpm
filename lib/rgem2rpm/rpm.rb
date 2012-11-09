@@ -35,26 +35,21 @@ class RGem2Rpm::Rpm
     install_str << "rm -rf %{buildroot}\n"
     # get directories
     @files[:directories].each { |directory|
-      directory.gsub!(/%/, '%%')
-      install_str << "install -d \"#{directory}\" %{buildroot}%{prefix}/\"#{directory}\"\n"
+      escaped_str = directory.gsub(/%/, '%%')
+      install_str << "install -d \"#{escaped_str}\" %{buildroot}%{prefix}/\"#{escaped_str}\"\n"
     }
     # get files
     @files[:files].each { |file|
-      if file.end_with?('.sh')
-        @files[:files].delete(file)
-        @files[:executables] << file
-      else
-        file.gsub!(/%/, '%%')
-        install_str << "install -m 644 \"#{file}\" %{buildroot}%{prefix}/\"#{file}\"\n"
-      end
+      escaped_str = file.gsub(/%/, '%%')
+      install_str << "install -m 644 \"#{escaped_str}\" %{buildroot}%{prefix}/\"#{escaped_str}\"\n"
     }
     # get specification
-    specfile = @files[:specification].gsub(/%/, '%%')
-    install_str << "install -m 644 \"#{specfile}\" %{buildroot}%{prefix}/\"#{specfile}\"\n"
+    escaped_str = @files[:specification].gsub(/%/, '%%')
+    install_str << "install -m 644 \"#{escaped_str}\" %{buildroot}%{prefix}/\"#{escaped_str}\"\n"
     # get executables
     @files[:executables].each { |executable|
-      executable.gsub!(/%/, '%%')
-      install_str << "install -m 0755 \"#{executable}\" %{buildroot}%{prefix}/\"#{executable}\"\n"
+      escaped_str = executable.gsub(/%/, '%%')
+      install_str << "install -m 0755 \"#{escaped_str}\" %{buildroot}%{prefix}/\"#{escaped_str}\"\n"
     }
     # return install string
     install_str.string
@@ -69,7 +64,11 @@ class RGem2Rpm::Rpm
     files_str << "%dir %{prefix}/#{@files[:gempath]}\n"
     files_str << "%dir %{prefix}/specifications\n"
     files_str << "%{prefix}/#{@files[:specification]}\n"
-    files_str << "%{prefix}/#{@files[:gempath]}/*\n" unless @files[:files].empty?
+    
+    @files[:files].each { |file|
+      escaped_str = file.gsub(/%/, '*')
+      files_str << "\"%{prefix}/#{escaped_str}\"\n"
+    }
     
     # get executables
     @files[:executables].each { |executable|

@@ -5,6 +5,7 @@
 	/usr/lib/rpm/brp-strip-comment-note %{__strip} %{__objdump} \
 %{nil}
 
+%define _binaries_in_noarch_packages_terminate_build 0
 %define distnum %{expand:%%(/usr/lib/rpm/redhat/dist.sh --distnum)}
 %define disttype %{expand:%%(/usr/lib/rpm/redhat/dist.sh --disttype)}
 %define name <%=name%>
