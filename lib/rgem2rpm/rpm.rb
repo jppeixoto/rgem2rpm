@@ -58,15 +58,16 @@ class RGem2Rpm::Rpm
   def filelist
     files_str = StringIO.new
     files_str << "%defattr(0644,#{@osuser},#{@osgroup},0755)\n"
-    files_str << "%dir %{prefix}\n"
-    files_str << "%dir %{prefix}/bin\n"
-    files_str << "%dir %{prefix}/gems\n"
-    files_str << "%dir %{prefix}/#{@files[:gempath]}\n"
-    files_str << "%dir %{prefix}/specifications\n"
-    files_str << "%{prefix}/#{@files[:specification]}\n"
     
+    files_str << "%dir %{prefix}\n"
+    @files[:directories].each { |file|
+      escaped_str = file.gsub(/%/, '?')
+      files_str << "%dir \"%{prefix}/#{escaped_str}\"\n"
+    }
+    
+    files_str << "%{prefix}/#{@files[:specification]}\n"
     @files[:files].each { |file|
-      escaped_str = file.gsub(/%/, '*')
+      escaped_str = file.gsub(/%/, '?')
       files_str << "\"%{prefix}/#{escaped_str}\"\n"
     }
     

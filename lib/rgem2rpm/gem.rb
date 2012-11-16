@@ -23,17 +23,8 @@ class RGem2Rpm::Gem
     @installdir = "#{@spec[:installname]}-#{@spec[:version]}"
     # install gem
     Gem::Installer.new(@filename, :env_shebang => true, :ignore_dependencies => true, :install_dir => @installdir, :bin_dir => "#{@installdir}/bin", :wrappers => true).install
-    # clean build if gem has extensions
-    @spec[:extensions].each do |extension|
-      Dir.chdir(File.dirname("#{@installdir}/gems/#{@filename[0, @filename.size-4]}/#{extension}")) do |path|
-        # delete intermediate build files
-        system "make clean"
-        # delete makefile
-        FileUtils.rm_rf("#{path}/Makefile")
-      end
-    end
-    # delete directories
-    Dir["#{@installdir}/*"].each {|name| FileUtils.rm_rf(name) unless name =~ /bin|gems|specifications/ }
+    # install build files
+    install_build_files
     # get file list
     files
     # build tar.gz
@@ -137,5 +128,21 @@ class RGem2Rpm::Gem
       raise "Error creating archive #{@installdir}.tar.gz" unless res
       # clean temporary files
       FileUtils.rm_rf @installdir
+    end
+    
+    def install_build_files
+      # get current directory
+      pwd = FileUtils.pwd
+      # clean build if gem has extensions
+      @spec[:extensions].each { |extension|
+        path = File.dirname("#{pwd}/#{@installdir}/gems/#{@filename[0, @filename.size-4]}/#{extension}")
+        FileUtils.cp_r "#{path}/#{@installdir}", "#{pwd}/"
+        FileUtils.rm_rf "#{path}/#{@installdir}"
+        FileUtils.rm_rf Dir.glob("#{path}/*.o")
+        FileUtils.rm_rf Dir.glob("#{path}/*.so")
+        FileUtils.rm_rf "#{path}/Makefile"
+      }
+      # delete directories
+      Dir["#{@installdir}/*"].each {|name| FileUtils.rm_rf(name) unless name =~ /bin|gems|specifications/ }
     end
 end
