@@ -11,12 +11,12 @@ class RGem2Rpm::Rpm
     @release = args[:release] || '1'
     @license = "See #{args[:homepage]}"
     @summary = args[:summary]
-    @packager = args[:packager] || 'EXGEMS'
-    @group = args[:group] || 'ptin/ext-generic'
+    @packager = args[:packager] || 'rgem2rpm'
+    @group = args[:group] || 'System Environment/Libraries'
     @osuser = args[:osuser] || 'root'
     @osgroup = args[:osgroup] || 'root'
     @description = process_description(args[:description])
-    @installdir = args[:installdir] || '/opt/ruby'
+    @installdir = args[:installdir] || '/usr/share/gems'
     @arch = args[:architecture]
     @files = args[:files]
     @rubygem = args[:rubygem]
