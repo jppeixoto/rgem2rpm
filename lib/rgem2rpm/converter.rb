@@ -8,8 +8,8 @@ class RGem2Rpm::Converter
       gem.install
       # build args to rpm
       args = gem.spec
-      [:template, :release, :group, :osuser, :osgroup, :installdir].each {|key|
-        args[key] = options[key] unless options[key].nil?
+      [:template, :release, :group, :osuser, :osgroup, :installdir, :rpmname].each {|key|
+        args[key] = options[key] if options[key]
       }
       # build rpm
       rpm = RGem2Rpm::Rpm.new args
