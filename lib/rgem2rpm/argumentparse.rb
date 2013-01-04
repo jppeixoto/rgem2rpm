@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require 'optparse'
 
 class RGem2Rpm::ArgumentParse

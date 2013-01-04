@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require 'erb'
 
 class RGem2Rpm::Rpm

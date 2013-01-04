@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 class RGem2Rpm::Converter
   class << self
     def process(options, filename)
