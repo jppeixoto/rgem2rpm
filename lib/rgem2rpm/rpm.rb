@@ -6,7 +6,8 @@ class RGem2Rpm::Rpm
   
   def initialize(args)
     @template     = args[:template] || File.dirname(__FILE__) + '/../../conf/template.spec'
-    @name         = args[:rpmname] || args[:installname]
+    @name         = args[:installname]
+    @rpmname      = args[:rpmname] || args[:installname]
     @gemname      = args[:name]
     @version      = args[:version]
     @release      = args[:release] || '1'

@@ -4,7 +4,7 @@ class RGem2Rpm::Converter
     def process(options, filename)
       objects = []
       # execute gemfile installation
-      gem = RGem2Rpm::Gem.new :filename => filename, :platform => options[:platform]
+      gem = RGem2Rpm::Gem.new :filename => filename, :platform => options[:platform], :rpmname => options[:rpmname]
       objects << gem
       gem.install
       # build args to rpm
