@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require 'pathname'
 require 'rubygems'
 require 'rubygems/installer'
@@ -9,8 +10,9 @@ class RGem2Rpm::Gem
   
   def initialize(args)
     # initialize paramters
-    @filename = args[:filename]
-    @platform = args[:platform] || 'ruby'
+    @filename    = args[:filename]
+    @platform    = args[:platform] || 'ruby'
+    @installname = args[:rpmname]
   end
   
   # install gem to pwd
@@ -18,7 +20,11 @@ class RGem2Rpm::Gem
     # get spec information
     @spec = compute_spec
     # define name and platform
-    @spec[:installname] = name_and_platform(@spec[:name])
+    if @installname
+        @spec[:installname] = @installname
+    else
+        @spec[:installname] = name_and_platform(@spec[:name])
+    end
     # set install dir
     @installdir = "#{@spec[:installname]}-#{@spec[:version]}"
     # install gem

@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require 'optparse'
 
 class RGem2Rpm::ArgumentParse
@@ -47,6 +48,11 @@ class RGem2Rpm::ArgumentParse
       opt.on("--jruby", "Build RPM to jruby platform (only when gem has executables).") do
         options[:platform] = 'jruby'
       end
+      #custom rpm name
+      opt.on("--rpmname RPMNAME", "Custom package name (in case you don't want it to be rubygem-gemname") do |rpmname|
+        options[:rpmname] = rpmname
+      end
+
 	  
       # No argument, shows at tail.  This will print an options summary.
       # Try it and see!

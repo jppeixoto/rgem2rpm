@@ -1,25 +1,27 @@
+# -*- encoding : utf-8 -*-
 require 'erb'
 
 class RGem2Rpm::Rpm
   attr_accessor :name, :version, :release, :license, :summary, :group, :packager, :description, :installdir
   
   def initialize(args)
-    @template = args[:template] || File.dirname(__FILE__) + '/../../conf/template.spec'
-    @name = args[:installname]
-    @gemname = args[:name]
-    @version = args[:version]
-    @release = args[:release] || '1'
-    @license = "See #{args[:homepage]}"
-    @summary = args[:summary]
-    @packager = args[:packager] || 'rgem2rpm'
-    @group = args[:group] || 'System Environment/Libraries'
-    @osuser = args[:osuser] || 'root'
-    @osgroup = args[:osgroup] || 'root'
-    @description = process_description(args[:description])
-    @installdir = args[:installdir] || '/usr/share/gems'
-    @arch = args[:architecture]
-    @files = args[:files]
-    @rubygem = args[:rubygem]
+    @template     = args[:template] || File.dirname(__FILE__) + '/../../conf/template.spec'
+    @name         = args[:installname]
+    @rpmname      = args[:rpmname] || args[:installname]
+    @gemname      = args[:name]
+    @version      = args[:version]
+    @release      = args[:release] || '1'
+    @license      = "See #{args[:homepage]}"
+    @summary      = args[:summary]
+    @packager     = args[:packager] || 'rgem2rpm'
+    @group        = args[:group] || 'System Environment/Libraries'
+    @osuser       = args[:osuser] || 'root'
+    @osgroup      = args[:osgroup] || 'root'
+    @description  = process_description(args[:description])
+    @installdir   = args[:installdir] || '/usr/share/gems'
+    @arch         = args[:architecture]
+    @files        = args[:files]
+    @rubygem      = args[:rubygem]
     @dependencies = args[:dependencies]
   end
   
