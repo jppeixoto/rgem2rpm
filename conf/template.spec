@@ -22,6 +22,7 @@ Packager: <%=packager%>
 Source: %{name}-%{version}.tar.gz
 Prefix: <%=installdir%>
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+AutoReqProv: no
 <%="BuildArch: noarch" unless buildarch.nil?%>
 <%="Requires: #{requires}" unless requires == ""%>
 <%="Conflicts: #{conflicts}" unless conflicts == ""%>
