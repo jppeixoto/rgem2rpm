@@ -48,37 +48,40 @@ class RGem2Rpm::Gem
     # get information from specification
     def compute_spec
       specinfo = {}
-      File.open(@filename, 'r') do |f|
-        Gem::Package.open(f, 'r') do |gem|
-          # spec info
-          metadata = gem.metadata
-          # name
-          specinfo[:name] = metadata.name
-          # version
-          specinfo[:version] = metadata.version
-          # summary
-          specinfo[:summary] = metadata.summary
-          # homepage
-          specinfo[:homepage] = metadata.homepage
-          # platform
-          specinfo[:platform] = metadata.platform
-          # description
-          specinfo[:description] = metadata.description
-          # if the gemspec has extensions defined, then this should be a 'native' arch.
-          specinfo[:architecture] = metadata.extensions.empty? ? 'all' : 'native'
-          # rubygem required version
-          specinfo[:rubygem] = metadata.required_rubygems_version
-          # dependencies
-          specinfo[:dependencies] = metadata.runtime_dependencies
-          # extensions
-          specinfo[:extensions] = metadata.extensions
-          # executables
-          specinfo[:executables] = metadata.executables
-        end
+      metadata = nil
+
+      if Gem::VERSION.to_i >= 2
+        metadata = Gem::Package.new(@filename).spec
+      else
+        Gem::Package.open(File.open(@filename)) { |gem| metadata = gem.metadata }
       end
+
+      # name
+      specinfo[:name] = metadata.name
+      # version
+      specinfo[:version] = metadata.version
+      # summary
+      specinfo[:summary] = metadata.summary
+      # homepage
+      specinfo[:homepage] = metadata.homepage
+      # platform
+      specinfo[:platform] = metadata.platform
+      # description
+      specinfo[:description] = metadata.description
+      # if the gemspec has extensions defined, then this should be a 'native' arch.
+      specinfo[:architecture] = metadata.extensions.empty? ? 'all' : 'native'
+      # rubygem required version
+      specinfo[:rubygem] = metadata.required_rubygems_version
+      # dependencies
+      specinfo[:dependencies] = metadata.runtime_dependencies
+      # extensions
+      specinfo[:extensions] = metadata.extensions
+      # executables
+      specinfo[:executables] = metadata.executables
+      #Return value
       specinfo
     end
-    
+   
     # define name and platform
     def name_and_platform(gemname)
       name = gemname
