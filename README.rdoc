@@ -1,33 +1,9 @@
 == rgem2rpm
 
-rgem2rpm is a gem to make a rpm package out of a .gem file. The intent
-is to provide a minimal and flexible way to easily package a gem into an
-rpm. With this done you can use all the facilities provided by Linux Red Hat
-systems to manage your ruby software.
+rgem2rpm was originally developed by Joao Peixoto but now is maintained by Sergio Freire (sergio-s-freire at ptinovacao.pt).
 
-rgem2rpm provides a sane set of out-of-the box defaults that should allow most
-gem files to assemble and Just Work.
+rgem2rpm has been moved to ptinovacao repository, please fork and watch it from there:
 
-== Getting Started
+https://github.com/ptinovacao/rgem2rpm
 
-1. Install the gem: <tt>gem install rgem2rpm</tt>.
-2. Run the command: rgem2rpm <gemfilename>
-3. The RPM file will be cretated in the current directory
 
-== Usage
-
-rgem2rpm's +rgem2rpm+ command is an executable that provides the capability to 
-assemble rpm's using gem files. Run the next command to get help:
-
-    $ rgem2rpm --help
-    Usage: rgem2rpm [options] [gemfilename]
-        options:
-                        --template TEMPLATE          RPM spec template.
-                        --release RELEASE            RPM spec release.
-                        --group GROUP                RPM spec group.
-                        --osuser OSUSER              OS install user.
-                        --osgroup OSGROUP            OS install group.
-                        --installdir INSTALLDIR      OS install directory.
-                        --jruby                      Build RPM to jruby platform (only when gem has executables).
-                        --help                       Show this message.
-                        --version                    Show version.
